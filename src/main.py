@@ -80,8 +80,8 @@ coffee_label = QLabel("Coffee today:")
 coffee_checkbox = QCheckBox()
 sport_label = QLabel("Sport today:")
 sport_checkbox = QCheckBox()
-feeling_ok_label = QLabel("Feeling okay today:")
-feeling_ok_checkbox = QCheckBox()
+feeling_ill_label = QLabel("Feeling ill today:")
+feeling_ill_checkbox = QCheckBox()
 sex_label = QLabel("Sex:")
 male_radio = QRadioButton("Male")
 female_radio = QRadioButton("Female")
@@ -112,8 +112,8 @@ side_panel_user_data_layout.addWidget(coffee_label)
 side_panel_user_data_layout.addWidget(coffee_checkbox)
 side_panel_user_data_layout.addWidget(sport_label)
 side_panel_user_data_layout.addWidget(sport_checkbox)
-side_panel_user_data_layout.addWidget(feeling_ok_label)
-side_panel_user_data_layout.addWidget(feeling_ok_checkbox)
+side_panel_user_data_layout.addWidget(feeling_ill_label)
+side_panel_user_data_layout.addWidget(feeling_ill_checkbox)
 side_panel_user_data_layout.addWidget(sex_label)
 side_panel_user_data_layout.addWidget(male_radio)
 side_panel_user_data_layout.addWidget(female_radio)
@@ -226,7 +226,7 @@ def collect_data():
     progress_bar.setValue(collection_time)
 
     # Stop collecting data after 10 seconds
-    if collection_time >= 20:
+    if collection_time >= 10:
         collection_timer.stop()  # Stop the QTimer
         save_button.setEnabled(True)  # Re-enable the start button
         progress_bar.setVisible(False)
@@ -249,7 +249,7 @@ def save_user_data():
     weight = weight_input.text()
     coffee_today = coffee_checkbox.isChecked()
     sport_today = sport_checkbox.isChecked()
-    feeling_ok_today = feeling_ok_checkbox.isChecked()
+    feeling_ill_today = feeling_ill_checkbox.isChecked()
     sex = male_radio.isChecked()
     smoker = smoker_checkbox.isChecked()
 
@@ -262,7 +262,7 @@ def save_user_data():
         "weight": weight,
         "coffee_today_YES": coffee_today,
         "sport_today_YES": sport_today,
-        "feeling_ok_today_YES": feeling_ok_today,
+        "feeling_ill_today_YES": feeling_ill_today,
         "gender": sex,
         "smoker": smoker
     }
@@ -273,7 +273,7 @@ def save_user_data():
     print(f"Weight: {weight}")
     print(f"Coffee today: {coffee_today}")
     print(f"Sport today: {sport_today}")
-    print(f"Feeling okay today: {feeling_ok_today}")
+    print(f"Feeling ill today: {feeling_ill_today}")
     print(f"Sex: {sex}")
     print(f"Smoker: {smoker}")
     print("---")

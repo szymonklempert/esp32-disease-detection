@@ -13,8 +13,7 @@ class Model:
         self.model = pickle.load(open(model_str, 'rb'))
 
     def predict(self, data) -> str:
-        print(data["eda"])
-        return self.re(self.model.predict(dict_to_df(data))[0])
+        return self.re[self.model.predict(dict_to_df(data))[0]]
 
     def predict_proba(self, data) -> str:
         return str(self.model.predict_proba(np.array(data).reshape(1, -1))[0][1])
