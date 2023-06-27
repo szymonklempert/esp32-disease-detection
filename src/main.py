@@ -1,10 +1,7 @@
-import os
-import sys
 import pyqtgraph as pg
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QVBoxLayout,
     QWidget,
     QLabel,
     QGroupBox,
@@ -16,7 +13,6 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QButtonGroup,
     QProgressBar,
-    QSizePolicy
 )
 from PyQt6.QtCore import QTimer
 import random
@@ -104,7 +100,6 @@ bottom_layout.addWidget(save_button)
 bottom_layout.addWidget(progress_label)
 bottom_layout.addWidget(progress_bar)
 
-
 # Dodanie elementów do panelu z danymi użytkownika
 side_panel_user_data_layout.addWidget(age_label)
 side_panel_user_data_layout.addWidget(age_input)
@@ -125,9 +120,9 @@ side_panel_user_data_layout.addWidget(smoker_label)
 side_panel_user_data_layout.addWidget(smoker_checkbox)
 side_panel_user_data_layout.addWidget(save_button)
 
-
 # Utworzenie wykresu temperatury
 graphWidget_temp = pg.PlotWidget()
+graphWidget_temp.setYRange(30, 45)
 layout.addWidget(graphWidget_temp)
 
 # Utworzenie wykresu wilgotności
@@ -151,24 +146,8 @@ curve_eda = graphWidget_eda.plot(
 
 # Funkcja wywoływana przy aktualizacji wykresów
 def update_chart():
-    # Odczyt danych z urządzenia (emulacja)
-    temperature = random.uniform(20, 30)
-    eda = random.uniform(50, 70)
-
-    # fake_data
-    data = f"Temp: {temperature}, Eda: {eda}"
-
-    # Przetwarzanie odczytanych danych
-    if data:
-        temperature, eda = parse_data(data)
-
-        # Dodawanie danych do list
-        temperature_data.append(temperature)
-        eda_data.append(eda)
-
-        # Aktualizacja danych na wykresach
-        curve_temp.setData(range(len(temperature_data)), temperature_data)
-        curve_eda.setData(range(len(eda_data)), eda_data)
+    curve_temp.setData(range(len(temperature_data)), temperature_data)
+    curve_eda.setData(range(len(eda_data)), eda_data)
 
 
 # Parsowanie danych
@@ -181,15 +160,24 @@ def parse_data(data):
     return temperature, eda
 
 
-
 collection_time = 0
 collection_timer = QTimer()
+
 
 # Function to start data collection
 def start_data_collection():
     # Clear existing data
+    global collection_time
+    global temperature_data
+    global eda_data
+    temperature_data = []
+    eda_data = []
+    collection_time = 0
     data_dict["temp"] = []
     data_dict["eda"] = []
+
+
+
 
     # Start collecting data for 10 seconds
     collection_timer.start(1000)  # Start the QTimer to trigger data collection every second
@@ -197,38 +185,46 @@ def start_data_collection():
     # Disable the start button to prevent multiple starts
     save_button.setEnabled(False)
     print("Collecting data.", end="")
-    
+
     # Show the progress bar
     progress_bar.setValue(0)
     progress_bar.setMaximum(COLLECTION_TIME)
+    progress_bar.setWindowTitle("Collecting data... Remain still!")
+    progress_bar.setFixedSize(500, 60)
     progress_bar.setVisible(True)
-
 
 
 # Function to handle data collection
 def collect_data():
     global collection_time
 
+
     # Odczyt danych z urządzenia (emulacja)
-    temperature = random.uniform(20, 30)
-    # eda = random.uniform(0, 1)
+    temperature = 36.6 + random.uniform(-.1, 1)
+    temperature_data.append(temperature)
     eda = 0
 
     while True:
         if ser.in_waiting > 0:
             received_data = ser.readline()
-            # print("Received data:", received_data)
+            # print("Received data original:", received_data)
             received_data = received_data.decode("utf-8")
+            # print("Received data decoded:", received_data)
+            received_data = received_data.split("b")[1].strip().replace('\'', '')
             # print("Received data:", received_data)
-            received_data = received_data[5:8]
-            # print("Received data:", received_data)
-            eda = float(received_data)
+            if received_data == '' or received_data == ' ':
+                continue
+            try:
+                eda = float(received_data)
+            except ValueError:
+                eda = 0
             print("Received data:", eda)
             # data.append(received_data)
             break
 
     # fake_data
     data = f"Temp: {temperature}, EDA: {eda}"
+    eda_data.append(eda)
 
     # Przetwarzanie odczytanych danych
     if data:
@@ -244,7 +240,7 @@ def collect_data():
     progress_bar.setValue(collection_time)
 
     # Stop collecting data after 10 seconds
-    if collection_time >= 20:
+    if collection_time >= COLLECTION_TIME:
         collection_timer.stop()  # Stop the QTimer
         save_button.setEnabled(True)  # Re-enable the start button
         progress_bar.setVisible(False)
@@ -261,6 +257,7 @@ def collect_data():
 
 collection_timer.timeout.connect(collect_data)
 
+
 # Funkcja obsługująca zapis danych użytkownika
 def save_user_data():
     age = age_input.text()
@@ -276,14 +273,14 @@ def save_user_data():
     # np. zapis do pliku, przekazanie do bazy danych itp.
     # W tym przykładzie, dane są wyświetlane w konsoli.
     data_dict["user_data"] = {
-        "age":                  age,
-        "height":               height,
-        "weight":               weight,
-        "coffee_today_YES":     coffee_today,
-        "sport_today_YES":      sport_today,
+        "age":                   age,
+        "height":                height,
+        "weight":                weight,
+        "coffee_today_YES":      coffee_today,
+        "sport_today_YES":       sport_today,
         "feeling_ill_today_YES": feeling_ill_today,
-        "gender":               sex,
-        "smoker":               smoker
+        "gender":                sex,
+        "smoker":                smoker
     }
 
     print("User Data:")
@@ -296,6 +293,19 @@ def save_user_data():
     print(f"Sex: {sex}")
     print(f"Smoker: {smoker}")
     print("---")
+
+
+def reset():
+    global collection_time
+    collection_time = 0
+    collection_timer.stop()  # Stop the QTimer
+    save_button.setEnabled(True)  # Re-enable the start button
+    progress_bar.setVisible(False)
+    temperature_data.clear()
+    eda_data.clear()
+    data_dict.clear()
+    stress_level_label.setText("")
+    print("Reset")
 
 
 # Podłączenie funkcji obsługującej zapis danych do przycisku "Save"

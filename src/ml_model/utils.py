@@ -1,6 +1,7 @@
 import neurokit2 as nk
 import numpy as np
 
+
 def raw_to_dict(data_raw: dict) -> dict:
     data, info = nk.eda_process(data_raw['eda'], sampling_rate=1)
 
@@ -23,8 +24,6 @@ def raw_to_dict(data_raw: dict) -> dict:
     result['EDA_tonic_std'] = eda_tonic.std()
     result['EDA_tonic_min'] = eda_tonic.min()
     result['EDA_tonic_max'] = eda_tonic.max()
-
-
 
     temp = data_raw['temp']
     temp = np.array(temp)
