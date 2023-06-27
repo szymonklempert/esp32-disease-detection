@@ -18,10 +18,13 @@ from PyQt6.QtWidgets import (
     QProgressBar,
     QSizePolicy
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import QTimer
 import random
-import time
+import serial
 
+ESP_PORT = "COM3"
+ESP_FREQUENCY = 1
+ser = serial.Serial(ESP_PORT, 115200)
 from app.client import get_stress_level
 
 # Inicjalizacja danych
@@ -30,9 +33,11 @@ eda_data = []
 
 data_dict = {
     "user_data": {},
-    "temp": [],
-    "eda": []
+    "temp":      [],
+    "eda":       []
 }
+
+COLLECTION_TIME = 20
 
 # Inicjalizacja wykresów
 app = QApplication([])
@@ -51,7 +56,7 @@ side_panel.setLayout(side_panel_layout)
 # size_policy.setHorizontalPolicy(QSizePolicy.Policy.Minimum)
 # size_policy.setVerticalPolicy(QSizePolicy.Policy.Minimum)
 # side_panel.setSizePolicy(size_policy)
-side_panel.setMinimumWidth(200)
+side_panel.setMinimumWidth(150)
 
 # Utworzenie etykiety z komunikatem o alercie
 # Utworzenie etykiet z komunikatami o alertach
@@ -63,11 +68,11 @@ side_panel_user_data = QGroupBox("User Data")
 side_panel_user_data_layout = QVBoxLayout()
 layout.addWidget(side_panel_user_data)
 side_panel_user_data.setLayout(side_panel_user_data_layout)
+side_panel_user_data.setMinimumWidth(150)
 
 progress_bar = QProgressBar()
 progress_bar.setVisible(False)
 progress_label = QLabel("Collecting data...")
-
 
 # Utworzenie pól wprowadzania danych użytkownika
 age_label = QLabel("Age:")
@@ -88,9 +93,8 @@ female_radio = QRadioButton("Female")
 sex_button_group = QButtonGroup()
 sex_button_group.addButton(male_radio)
 sex_button_group.addButton(female_radio)
-smoker_label = QLabel("Smoker?")
+smoker_label = QLabel("Are you a smoker?")
 smoker_checkbox = QCheckBox()
-
 
 # Utworzenie przycisku "Save"
 bottom_layout = QHBoxLayout()
@@ -196,7 +200,7 @@ def start_data_collection():
     
     # Show the progress bar
     progress_bar.setValue(0)
-    progress_bar.setMaximum(10)
+    progress_bar.setMaximum(COLLECTION_TIME)
     progress_bar.setVisible(True)
 
 
@@ -207,7 +211,21 @@ def collect_data():
 
     # Odczyt danych z urządzenia (emulacja)
     temperature = random.uniform(20, 30)
-    eda = random.uniform(0, 1)
+    # eda = random.uniform(0, 1)
+    eda = 0
+
+    while True:
+        if ser.in_waiting > 0:
+            received_data = ser.readline()
+            # print("Received data:", received_data)
+            received_data = received_data.decode("utf-8")
+            # print("Received data:", received_data)
+            received_data = received_data[5:8]
+            # print("Received data:", received_data)
+            eda = float(received_data)
+            print("Received data:", eda)
+            # data.append(received_data)
+            break
 
     # fake_data
     data = f"Temp: {temperature}, EDA: {eda}"
@@ -226,7 +244,7 @@ def collect_data():
     progress_bar.setValue(collection_time)
 
     # Stop collecting data after 10 seconds
-    if collection_time >= 10:
+    if collection_time >= 20:
         collection_timer.stop()  # Stop the QTimer
         save_button.setEnabled(True)  # Re-enable the start button
         progress_bar.setVisible(False)
@@ -239,6 +257,7 @@ def collect_data():
         result = get_stress_level(data_dict)
         stress_level_label.setText(result)
         stress_level_label.setStyleSheet("color: red")
+
 
 collection_timer.timeout.connect(collect_data)
 
@@ -257,14 +276,14 @@ def save_user_data():
     # np. zapis do pliku, przekazanie do bazy danych itp.
     # W tym przykładzie, dane są wyświetlane w konsoli.
     data_dict["user_data"] = {
-        "age": age,
-        "height": height,
-        "weight": weight,
-        "coffee_today_YES": coffee_today,
-        "sport_today_YES": sport_today,
+        "age":                  age,
+        "height":               height,
+        "weight":               weight,
+        "coffee_today_YES":     coffee_today,
+        "sport_today_YES":      sport_today,
         "feeling_ill_today_YES": feeling_ill_today,
-        "gender": sex,
-        "smoker": smoker
+        "gender":               sex,
+        "smoker":               smoker
     }
 
     print("User Data:")

@@ -5,8 +5,8 @@ PyQt6==6.5.1
 PyQt6-Qt6==6.5.1
 PyQt6-sip==13.5.1
 pyqtgraph==0.13.3
-qtconsole==5.3.2
-QtPy==2.2.1
+qtconsole==5.4.3
+QtPy==2.3.1
 scikit-learn==1.2.2
-scipy==1.10.1
-sklearn==0.0.post1
+scipy==1.11.0
+sklearn==0.0.post5
